@@ -1,0 +1,112 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+data("iris")
+head(iris)
+```
+```{r}
+par(mfrow=c(1,2)) #DIVIDE GRAPH IN TWO COLUMNS 
+
+boxplot(iris$Sepal.Length, main = "Sepal Length", sub=paste("Outlier rows: ", 
+  boxplot.stats(iris$Sepal.Length)$out))
+
+
+boxplot(iris$Petal.Length, main = "Petal Length", sub=paste("Outlier rows: ", 
+  boxplot.stats(iris$Petal.Length)$out))
+
+
+library(e1071) #for skewness function 
+par(mfrow=c(1,2)) #divide graph area into two columns 
+
+plot(density(iris$Sepal.Length), main = "Density Plot: Speed", 
+     ylab = "Sepal Length", sub=paste("Skewness:", 
+                                   round(e1071::skewness(iris$Sepal.Length))))
+
+polygon(density(iris$Sepal.Length), col = "blue")
+
+plot(density(iris$Petal.Length), main = "Density Plot: Distance", 
+     ylab = "Petal Lengthh", sub=paste("Skewness:", 
+                                   round(e1071::skewness(iris$Petal.Length))))
+
+polygon(density(iris$Petal.Length), col = "blue")
+```
+
+
+
+
+```{r}
+scatter.smooth(x=iris$Sepal.Length, y = iris$Petal.Length, main = "Length of a Sepal by Petal Length")
+
+cor(iris$Sepal.Length, iris$Petal.Length)
+
+relation <- lm(formula = iris$Petal.Length~iris$Sepal.Length)
+print(relation)
+summary(relation)
+```
+
+```{r}
+set.seed(100)
+
+trainindex <- sample(1:nrow(iris), 0.8*nrow(iris)) #training rows index 
+traindata <- iris[trainindex,]
+
+testdata <- iris[-trainindex,]
+
+Petal.Lengthmd <- lm(Petal.Length~Sepal.Length, data = traindata)
+Petal.Lengthpd <- predict(relationmd, testdata)
+
+summary(Petal.Lengthmd)
+```
+
+```{r}
+
+actual_preds <- data.frame(cbind(actuals=testdata$Petal.Length,
+                                 predicteds = Petal.Lengthpd)) #make the actuals_preds a data frame 
+
+correlation_acc <- cor(actual_preds) ## 
+
+###
+correlation_acc
+actual_preds
+
+head(actual_preds)
+```
+
+```{r}
+
+
+min_max_acc <- mean(apply(actual_preds,1, min)/
+                      apply(actual_preds,1, max))
+
+min_max_acc
+```
+
+```{r}
+mape <- mean(abs((actual_preds$predicteds - actual_preds$actuals))/actual_preds$actuals)
+
+mape
+
+```
+
+```{r}
+
+library(caret)
+install.packages("caret")
+
+ctrl <- trainControl(method = "cv", number =5)
+
+model <- train(dist~speed, data =cars, method = "lm", trControl = ctrl)
+
+print(model)
+
+model$finalModel
+
+model$resample
+```

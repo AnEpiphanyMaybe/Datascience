@@ -1,0 +1,137 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+The research question I had was “Can the length of the Petal be predicted by the length of the Sepal in an iris flower”. The dependent variable was the Peta length and the independent variable was the Sepal length.
+
+```{r}
+data("iris")
+head(iris)
+nrow(iris)
+```
+
+The data from R contained the Sepal Length, Sepal Width, Petal length, Petal width, and Species of the iris. I used the data from the Sepal Length and Petal length. Using a density plot, I found that the Sepal length had a somewhat normal distribution, but the Petal length didn’t and had bimodal distribution. Using a box plot, I found that neither variables had outliers.
+From the graph distribution it is clear that the length of the petal by the length of the petal has a bimodal distribution.
+
+```{r}
+par(mfrow=c(1,2)) #DIVIDE GRAPH IN TWO COLUMNS 
+
+boxplot(iris$Sepal.Length, main = "Sepal Length", sub=paste("Outlier rows: ", 
+  boxplot.stats(iris$Sepal.Length)$out))
+
+
+boxplot(iris$Petal.Length, main = "Petal Length", sub=paste("Outlier rows: ", 
+  boxplot.stats(iris$Petal.Length)$out))
+
+
+library(e1071) #for skewness function 
+par(mfrow=c(1,2)) #divide graph area into two columns 
+
+plot(density(iris$Sepal.Length), main = "Density Plot: Sepal Length", 
+     ylab = "Sepal Length", sub=paste("Skewness:", 
+                                   round(e1071::skewness(iris$Sepal.Length))))
+
+polygon(density(iris$Sepal.Length), col = "blue")
+
+plot(density(iris$Petal.Length), main = "Density Plot: Petal length", 
+     ylab = "Petal Lengthh", sub=paste("Skewness:", 
+                                   round(e1071::skewness(iris$Petal.Length))))
+
+polygon(density(iris$Petal.Length), col = "blue")
+```
+
+
+I didn’t need to clean the data, because it was already clean and had all values filled.
+
+```{r}
+scatter.smooth(x=iris$Sepal.Length, y = iris$Petal.Length, main = "Length of a Sepal by Petal Length", xlab = "Sepal length", ylab = "Petal length")
+
+cor(iris$Sepal.Length, iris$Petal.Length)
+
+relation <- lm(formula = iris$Petal.Length~iris$Sepal.Length)
+print(relation)
+summary(relation)
+```
+
+I chose to use linear regression for this model to see if there is a linear relationship between the sepal length and petal length. This specific model seemed to fit the data more compared to other types of models.
+
+```{r}
+set.seed(100)
+
+trainindex <- sample(1:nrow(iris), 0.8*nrow(iris)) #training rows index 
+traindata <- iris[trainindex,]
+
+testdata <- iris[-trainindex,]
+
+Petal.Lengthmd <- lm(Petal.Length~Sepal.Length, data = traindata)
+Petal.Lengthpd <- predict(relation, testdata)
+
+summary(Petal.Lengthmd)
+```
+
+The assumption from the model is that there is a linear relationship.
+
+```{r}
+
+actual_preds <- data.frame(cbind(actuals=testdata$Petal.Length,
+                                 predicteds = Petal.Lengthpd)) #make the actuals_preds a data frame 
+
+correlation_acc <- cor(actual_preds) ##correlation
+
+###
+correlation_acc
+actual_preds
+
+head(actual_preds)
+```
+
+Some interesting findings from the model I found were that there wasn’t really a big correlation between the two variables. In addition to this, looking at the density plot for the Petal length, the graph wasn't a normal distribution. It seemed more bimodal, which was surprising. From the results, I can tell there was some amount of correlation between the Sepal Length and Petal length.
+
+```{r}
+##Min Max accuracy formula, tells how good of a prediction we have
+
+min_max_acc <- mean(apply(actual_preds,1, min)/
+                      apply(actual_preds,1, max))
+
+min_max_acc
+```
+
+```{r}
+##Mean Absolute percentage error
+
+mape <- mean(abs((actual_preds$predicteds - actual_preds$actuals))/actual_preds$actuals)
+
+mape
+
+```
+
+```{r}
+
+library(caret)
+
+ctrl <- trainControl(method = "cv", number =5)
+
+model <- train(dist~speed, data =cars, method = "lm", trControl = ctrl)
+
+print(model)
+
+model$finalModel
+
+model$resample
+```
+
+
+```{r}
+ggplot(iris, aes(x = Sepal.Length, y = Petal.Length)) +
+     geom_point() +
+     geom_smooth(method = "lm", se = FALSE)
+```
+
+```{r}
+iris %>%
+  filter(!is.na(Sepal.Length)) %>%
+  ggplot(aes(x = Sepal.Length, y = Petal.Length))+
+  geom_point()+
+  geom_smooth(method = "lm", se = F)
+```
